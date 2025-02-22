@@ -1,136 +1,89 @@
-# routes/openai_router.py
-# routes/ai_router.py
 from flask import Blueprint, request, jsonify
 from openai import OpenAI
 import os
-import httpx
 from dotenv import load_dotenv
 import routes.code_converter as code_converter
 
 load_dotenv()
-ai_routes = Blueprint('openai_routes', __name__)
 
-# Create custom httpx client
-http_client = httpx.Client(
-    base_url="https://openrouter.ai/api/v1",
-    headers={
-        "HTTP-Referer": "http://localhost:5000",
-        "X-Title": "Manim Animation Generator",
-        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
-    }
-)
+ai_routes = Blueprint('ai_routes', __name__)
 
-# Initialize OpenAI client with custom http client
+print(f"Loaded API Key: {os.getenv('OPENROUTER_API_KEY')}")
+
+# Initialize OpenAI client with environment variables
 client = OpenAI(
-    api_key=os.getenv('OPENROUTER_API_KEY'),
-    http_client=http_client
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY")
 )
 
 @ai_routes.route('/generate-prompt', methods=['POST'])
 def generate_prompt():
     try:
         data = request.json
-        user_prompt = data.get('prompt')
+        user_prompt = data.get('prompt', '').strip()
         
         if not user_prompt:
-            return jsonify({'error': 'No prompt provided'}), 400
+            return jsonify({'success': False, 'error': 'No prompt provided'}), 400
 
+        # Prepare the message payload for the OpenAI request
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": f"""
+                            You are an AI assistant that generates **high-quality, animated videos** using Manim. 
+                            The output should resemble videos made by **3Blue1Brown**—clear, structured, visually engaging, and informative.
+
+                            **Guidelines:**
+                            - **Write ONLY code** for making Manim CE animations (NO EXPLANATION).
+                            - **Avoid .svg files**, create graphics from scratch.
+                            - **Prioritize custom functions**, use new libraries when appropriate.
+                            - **Merge multiple scenes** into a single Scene class.
+                            - **MathTex** must use **r""** syntax for proper equation formatting.
+                            - **Shorten user-provided text**, using shapes, animations, and concise phrases.
+                            - **Aspect Ratio:** Generate animations for **1920x1080** with a **safe area of 1600x900**.
+                            - Use **MovingCameraScene** instead of **Scene** when using the camera.
+
+                            **Required Libraries:** 
+                            ```python
+                            from manim import *
+                            import numpy as np
+                            import random
+                            import math
+                            ```
+
+                            **User's prompt:** {user_prompt}
+                        """
+                    }
+                ]
+            }
+        ]
+
+        # Request completion from the OpenAI client
         completion = client.chat.completions.create(
             model="qwen/qwen2.5-vl-72b-instruct:free",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": f"""
-                                `You are an AI assistant that generates **high-quality, animated videos** using Manim. The output should resemble videos made by **3Blue1Brown**—clear, structured, visually engaging, and informative. Follow these strict guidelines:
-                Write ONLY code for making manim ceanimation (NO EXPLAINATION) 
-                ** dont use .svg files make them from scratch
-                Take care of following things :
-                - Make as many functions from scratch as possible
-                - use new libraries as possible
-                - Make only 1 Scene class if user prompts many scenes then merge it into one scene and then make longer code 
-                - MathTex must have r"" and it must show proper equations
-                - Don't write long sentenses given by user , break them and then explain them using shapes and animations and SHORT WORDS OR PHRASES
-                IMP- Generate Manim CE code to display animations within a 16:9 aspect ratio screen (1920x1080). Keep all elements and animations within a central safe area of 1600x900 pixels, leaving a 10% margin on all sides. Avoid any text or graphics going beyond this region. Make text fonts and graph size accordingly . 
-
-                - Use MovingCameraScene instead of Scene when you use Camera
-
-                     
-
-                     reference code :
-                     from manim import *
-                     import numpy as np
-                     import random
-                     import math
-                           class MedicalDiagnosisScene(Scene):
-                               def construct(self):
-                                   # First, show "Real World Usage" alone
-                                   initial_text = Text("Real World Usage", color="#90EE90").scale(0.7)
-                                   initial_text.move_to(ORIGIN)
-
-                                   # Show initial text
-                                   self.play(Write(initial_text))
-                                   self.wait(1)
-
-                                   # Fade out initial text before showing the sequence
-                                   self.play(FadeOut(initial_text))
-                                   self.wait(0.5)
-
-                                   # Create the three texts with proper spacing
-                                   title1 = Text("Medical Diagnosis", color=BLUE).scale(0.7)
-                                   title2 = Text("Real World Usage", color="#90EE90").scale(0.7)
-                                   title3 = Text("Financial Risk Assessment", color="#FFA07A").scale(0.7)
-
-                                   # Group and arrange them vertically
-                                   text_group = VGroup(title1, title2, title3).arrange(DOWN, buff=1.5)
-                                   text_group.move_to(ORIGIN)
-
-                                   # Animate each text separately with proper timing
-                                   self.play(FadeIn(title1), run_time=1)
-                                   self.wait(0.5)
-
-                                   self.play(FadeIn(title2), run_time=1)
-                                   self.wait(0.5)
-
-                                   self.play(FadeIn(title3), run_time=1)
-                                   self.wait(2)
-                  
-                               
-                                    
-                                             
-                                             
-                              
-
-                                always include this libraries in starting of the code:
-                                manim , random , numpy , math
-
-                                user's prompt :  {user_prompt}
-           
-                            """
-                        },
-                    ]
-                }
-            ]
+            messages=messages
         )
 
-        ai_code = completion.choices[0].message.content
+        # Extract the generated code from the API response
+        ai_code = completion.choices[0].message.content.strip()
+        print(f"AI Generated Code:\n{ai_code}\n{'-'*40}")
 
-        print(f"AI code : \n{ai_code}","-"*20)
-
+        # Convert and clean up the generated code using the code_converter module
         manim_code = code_converter.extract_code_from_response(ai_code)
-
-        print(f"Converted code:\n{manim_code}")
+        print(f"Converted Manim Code:\n{manim_code}\n{'-'*40}")
 
         return jsonify({
             'success': True,
             'code': manim_code
-        })
+        }), 200
 
     except Exception as e:
-        print(f"Error in generate-prompt: {str(e)}")
+        error_message = f"Error in generate-prompt: {str(e)}"
+        print(error_message)
         return jsonify({
             'success': False,
-            'error': str(e)
+            'error': error_message
         }), 500

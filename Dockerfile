@@ -1,8 +1,15 @@
 # Base image with Python
 FROM python:3.9-slim
 
-RUN mkdir -p /app/workspace/media && \
-    chmod 777 /app/workspace
+# Create necessary directories with correct permissions
+RUN mkdir -p /app/workspace/media \
+    && mkdir -p /app/static/videos \
+    && mkdir -p /app/temp_renders
+
+# Set permissions
+RUN chmod -R 777 /app/workspace \
+    && chmod -R 777 /app/static/videos \
+    && chmod -R 777 /app/temp_renders
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -24,12 +31,14 @@ WORKDIR /app
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
 
-
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application
 COPY . .
+
+# Set environment variable for Manim
+ENV MEDIA_DIR=/app/workspace/media
 
 # Expose port for Flask
 EXPOSE 8080
