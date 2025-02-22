@@ -24,7 +24,6 @@
       "PATH": "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin",
       "FFMPEG_PATH": "/opt/homebrew/bin/ffmpeg",
       "LATEX_PATH": "/Library/TeX/texbin/latex"
-    },
-    "pythonVersion": "3.12"
+    }
   }
   
