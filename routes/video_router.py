@@ -17,7 +17,7 @@ def create_manim_file(code, temp_dir):
         print("[SUCCESS] Manim code file created at:", file_path)
     except Exception as e:
         print("[ERROR] Failed to create Manim file:", str(e))
-        raise e
+        raise e 
     return file_path
 
 def generate_video(manim_file, temp_dir):
