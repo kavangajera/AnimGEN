@@ -1,0 +1,32 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "app.py",
+        "use": "@vercel/python"
+      },
+      {
+        "src": "routes/animation.py",
+        "use": "@vercel/python"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "routes/animation.py"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "app.py"
+      }
+    ],
+    "env": {
+      "PATH": "/usr/local/bin:/usr/bin:/bin",
+      "FFMPEG_PATH": "/usr/bin/ffmpeg",
+      "LATEX_PATH": "/usr/bin/latex"
+    },
+    "scripts": {
+      "postinstall": "apt-get update && apt-get install -y ffmpeg texlive texlive-latex-extra dvipng"
+    }
+  }
+  
