@@ -21,12 +21,10 @@
       }
     ],
     "env": {
-      "PATH": "/usr/local/bin:/usr/bin:/bin",
-      "FFMPEG_PATH": "/usr/bin/ffmpeg",
-      "LATEX_PATH": "/usr/bin/latex"
+      "PATH": "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin",
+      "FFMPEG_PATH": "/opt/homebrew/bin/ffmpeg",
+      "LATEX_PATH": "/Library/TeX/texbin/latex"
     },
-    "scripts": {
-      "postinstall": "apt-get update && apt-get install -y ffmpeg texlive texlive-latex-extra dvipng"
-    }
+    "pythonVersion": "3.12"
   }
   

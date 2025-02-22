@@ -47,7 +47,7 @@ def generate_prompt():
 
                      ## Animation Methods
                      - Create
-                     - Write
+                     - Write 
                      - FadeIn
                      - FadeOut
                      - GrowFromCenter
