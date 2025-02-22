@@ -8,7 +8,7 @@ load_dotenv()
 
 ai_routes = Blueprint('ai_routes', __name__)
 
-print(f"Loaded API Key: {os.getenv('OPENROUTER_API_KEY')}")
+
 
 # Initialize OpenAI client with environment variables
 client = OpenAI(

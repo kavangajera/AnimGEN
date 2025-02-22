@@ -2,14 +2,7 @@
 FROM python:3.9-slim
 
 # Create necessary directories with correct permissions
-RUN mkdir -p /app/workspace/media \
-    && mkdir -p /app/static/videos \
-    && mkdir -p /app/temp_renders
 
-# Set permissions
-RUN chmod -R 777 /app/workspace \
-    && chmod -R 777 /app/static/videos \
-    && chmod -R 777 /app/temp_renders
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
