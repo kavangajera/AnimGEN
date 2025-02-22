@@ -1,17 +1,29 @@
 # routes/openai_router.py
+# routes/ai_router.py
 from flask import Blueprint, request, jsonify
 from openai import OpenAI
 import os
+import httpx
 from dotenv import load_dotenv
 import routes.code_converter as code_converter
 
 load_dotenv()
 ai_routes = Blueprint('openai_routes', __name__)
 
-# Initialize OpenAI client
-client = OpenAI(
+# Create custom httpx client
+http_client = httpx.Client(
     base_url="https://openrouter.ai/api/v1",
-    api_key=os.getenv('OPENROUTER_API_KEY')
+    headers={
+        "HTTP-Referer": "http://localhost:5000",
+        "X-Title": "Manim Animation Generator",
+        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}"
+    }
+)
+
+# Initialize OpenAI client with custom http client
+client = OpenAI(
+    api_key=os.getenv('OPENROUTER_API_KEY'),
+    http_client=http_client
 )
 
 @ai_routes.route('/generate-prompt', methods=['POST'])

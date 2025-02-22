@@ -1,16 +1,23 @@
-# routes/video_router.py
 from flask import Blueprint, request, jsonify, send_file
-import tempfile
 import subprocess
 from pathlib import Path
 import os
 import time
-
+import uuid
 
 video_routes = Blueprint('video_routes', __name__)
 
-def create_manim_file(code, temp_dir):
-    file_path = os.path.join(temp_dir, "scene.py")
+# Define constant paths
+WORKSPACE_DIR = "/app/workspace"
+MEDIA_DIR = "/app/workspace/media"
+
+# Ensure directories exist
+os.makedirs(WORKSPACE_DIR, exist_ok=True)
+os.makedirs(MEDIA_DIR, exist_ok=True)
+
+def create_manim_file(code, session_dir):
+    """Create a Manim Python file in the specified directory."""
+    file_path = os.path.join(session_dir, "scene.py")
     try:
         print("[INFO] Creating Manim code file...")
         with open(file_path, "w") as f:
@@ -21,7 +28,21 @@ def create_manim_file(code, temp_dir):
         raise e
     return file_path
 
-def generate_video(manim_file, temp_dir):
+def cleanup_old_files(directory, max_age_hours=1):
+    """Clean up files older than specified hours."""
+    try:
+        current_time = time.time()
+        for item in Path(directory).glob("*"):
+            if item.is_dir():
+                # Check if directory is older than max_age_hours
+                if (current_time - item.stat().st_mtime) > (max_age_hours * 3600):
+                    import shutil
+                    shutil.rmtree(item)
+    except Exception as e:
+        print(f"[WARNING] Cleanup error: {str(e)}")
+
+def generate_video(manim_file, session_dir):
+    """Generate video using Manim in the specified directory."""
     try:
         print("[INFO] Starting video generation with Manim...")
         start_time = time.time()
@@ -37,7 +58,7 @@ def generate_video(manim_file, temp_dir):
         
         result = subprocess.run(
             cmd,
-            cwd=temp_dir,
+            cwd=session_dir,
             capture_output=True,
             text=True
         )
@@ -47,8 +68,8 @@ def generate_video(manim_file, temp_dir):
             print(result.stderr)
             return None, f"Manim error: {result.stderr}"
         
-        # Updated media directory path
-        media_dir = os.path.join(temp_dir, "media", "videos", "scene", "1080p60")
+        # Look for the video file
+        media_dir = os.path.join(session_dir, "media", "videos", "scene", "1080p60")
         print("[INFO] Looking for video file in:", media_dir)
         
         video_files = list(Path(media_dir).glob("*.mp4"))
@@ -69,7 +90,6 @@ def generate_video(manim_file, temp_dir):
         print("[ERROR] Exception during video generation:", str(e))
         return None, str(e)
 
-
 @video_routes.route('/generate-video', methods=['POST'])
 def generate_video_route():
     try:
@@ -81,10 +101,19 @@ def generate_video_route():
             print("[ERROR] No Manim code provided in the request.")
             return jsonify({'error': 'No Manim code provided'}), 400
         
-        with tempfile.TemporaryDirectory() as temp_dir:
-            print("[INFO] Using temporary directory:", temp_dir)
-            manim_file = create_manim_file(manim_code, temp_dir)
-            video_path, error = generate_video(manim_file, temp_dir)
+        # Create a unique session directory
+        session_id = str(uuid.uuid4())
+        session_dir = os.path.join(WORKSPACE_DIR, session_id)
+        os.makedirs(session_dir, exist_ok=True)
+        
+        print("[INFO] Using session directory:", session_dir)
+        
+        # Clean up old files
+        cleanup_old_files(WORKSPACE_DIR)
+        
+        try:
+            manim_file = create_manim_file(manim_code, session_dir)
+            video_path, error = generate_video(manim_file, session_dir)
             
             if error:
                 print("[ERROR] Video generation failed:", error)
@@ -97,6 +126,11 @@ def generate_video_route():
                 as_attachment=True,
                 download_name='animation.mp4'
             )
+            
+        finally:
+            # Cleanup will happen in the background for files older than 1 hour
+            # We don't delete immediately in case the file is still being sent
+            pass
             
     except Exception as e:
         print(f"[ERROR] Exception in generate-video route: {str(e)}")
