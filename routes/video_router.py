@@ -28,7 +28,7 @@ def generate_video(manim_file, temp_dir):
         
         cmd = [
             "manim",
-            "-pql",  # Using -pql for fast rendering (change to -pqh for higher quality)
+            "-pql",  # Fast rendering (use -pqh for high quality)
             manim_file,
             "SquareToCircleToText"
         ]
@@ -47,6 +47,7 @@ def generate_video(manim_file, temp_dir):
             print(result.stderr)
             return None, f"Manim error: {result.stderr}"
         
+        # Updated media directory path
         media_dir = os.path.join(temp_dir, "media", "videos", "scene", "1080p60")
         print("[INFO] Looking for video file in:", media_dir)
         
@@ -67,6 +68,7 @@ def generate_video(manim_file, temp_dir):
     except Exception as e:
         print("[ERROR] Exception during video generation:", str(e))
         return None, str(e)
+
 
 @video_routes.route('/generate-video', methods=['POST'])
 def generate_video_route():

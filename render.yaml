@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: animgen-app
+    env: python
+    region: oregon  # Choose your preferred region
+    plan: free
+
+    # Start command using Gunicorn for production
+    startCommand: gunicorn app:create_app -b 0.0.0.0:8080
+
+    # Build commands to install required packages
+    buildCommand: |
+      sudo apt-get update
+      sudo apt-get install -y ffmpeg texlive texlive-latex-extra dvipng cm-super
+      pip install -r requirements.txt
+      pip install manim
+
+    # Expose the web service on port 8080
+    envVars:
+      - key: PORT
+        value: "8080"
+
+    # Specify where your code is located
+    srcDir: .
+
+    # Health check endpoint (optional)
+    healthCheckPath: /api/health
