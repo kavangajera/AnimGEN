@@ -30,7 +30,7 @@ def run_manim():
         print("\n[INFO] Running Manim command...")
 
         # Navigate to the 'manim_files' directory and run the Manim command
-        cmd = ["manim", "scene.py", "HelloWorldScene"]
+        cmd = ["manim", "-ql", "scene.py", "HelloWorldScene"]
 
         # Using subprocess with real-time output and timeout
         process = subprocess.Popen(
