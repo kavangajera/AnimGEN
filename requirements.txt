@@ -97,6 +97,7 @@
 # gunicorn
 
 
+cloudinary
 manim==0.17.3
 flask==2.3.3
 flask-cors==4.0.0
