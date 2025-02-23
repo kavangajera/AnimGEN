@@ -2,7 +2,6 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from routes.ai_router import ai_routes
-from routes.video_router import video_routes
 
 # Load environment variables
 load_dotenv()
@@ -13,7 +12,6 @@ def create_app():
 
     # Register routes
     app.register_blueprint(ai_routes, url_prefix='/api')
-    app.register_blueprint(video_routes, url_prefix='/api')
 
     # Define the root route
     @app.route('/')
