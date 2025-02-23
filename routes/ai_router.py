@@ -8,6 +8,9 @@ from cloudinary.uploader import upload as cloudinary_upload
 import cloudinary
 import ast
 import shutil
+from pymongo import MongoClient
+from datetime import datetime, timezone
+from pymongo.errors import ServerSelectionTimeoutError
 
 load_dotenv()
 
@@ -26,6 +29,57 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
+
+MONGO_URI = "mongodb+srv://ashishrathod53839:ashishashish@cluster1.vki9pld.mongodb.net/"
+
+def initialize_mongodb():
+    try:
+        # Connect with a timeout of 5 seconds
+        client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
+        # Test the connection
+        client.server_info()
+        
+        # Create or get the database
+        db = client['video_database']
+        
+        # Create or get the collection
+        if 'videos' not in db.list_collection_names():
+            # Create the collection with validation
+            db.create_collection('videos')
+            print("Videos collection created successfully")
+            
+        videos_collection = db['videos']
+        
+        # Create an index on timestamp for efficient sorting
+        videos_collection.create_index([("timestamp", -1)])
+        
+        print("MongoDB initialized successfully")
+        return client, db, videos_collection
+    except ServerSelectionTimeoutError:
+        print("Could not connect to MongoDB server. Please check your connection string and internet connection.")
+        raise
+    except Exception as e:
+        print(f"Error initializing MongoDB: {str(e)}")
+        raise
+
+try:
+    client, db, videos_collection = initialize_mongodb()
+except Exception as e:
+    print(f"Failed to initialize MongoDB: {str(e)}")
+    # You might want to exit the application here depending on your requirements
+    # sys.exit(1)
+
+
+
+def store_video_url(url, prompt):
+    """Store video URL and metadata in MongoDB"""
+    video_data = {
+        'url': url,
+        'prompt': prompt,
+        'timestamp': datetime.now(timezone.utc),
+        'status': 'completed'
+    }
+    return videos_collection.insert_one(video_data)
 
 def extract_scene_name(python_file_path):
     """Extract the name of the Scene class from the Python file."""
@@ -175,6 +229,7 @@ def generate_video():
                 shutil.rmtree('media')
             if os.path.exists('temp_manim_script.py'):
                 os.remove('temp_manim_script.py')
+            
         except Exception as e:
             print(f"Cleanup error (non-critical): {str(e)}")
 
@@ -183,6 +238,24 @@ def generate_video():
             'video_url': video_url,
             'video_path': expected_video_path
         }), 200
+
+        # try:
+        #     stored_video = store_video_url(video_url, user_prompt)
+        #     response_data = {
+        #         'video_url': video_url,
+        #         'video_id': str(stored_video.inserted_id)
+        #     }
+        #     return jsonify(response_data)
+        # except Exception as db_error:
+        #     print(f"Database error: {str(db_error)}")
+        #     # Still return the video URL even if database storage fails
+
+        #     return jsonify({
+        #         'video_url': video_url,
+        #         'warning': 'Video generated but failed to save to history'
+        #     })
+
+        
 
 
     except Exception as e:
