@@ -96,7 +96,7 @@
 # XlsxWriter==3.2.2
 # gunicorn
 
-
+pymongo
 cloudinary
 manim==0.17.3
 flask==2.3.3
