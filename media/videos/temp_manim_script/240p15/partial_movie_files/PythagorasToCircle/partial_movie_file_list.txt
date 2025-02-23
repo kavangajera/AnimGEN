@@ -1,8 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/1023375400_3526485534_223132457.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/4196051689_3376840430_2332902779.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/4196051689_310462277_2333582862.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/3683372898_2585394762_1882944730.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/1035039504_3544409176_3863515362.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/1285207607_3278380913_1134739924.mp4'
-file 'file:/Users/kavan/Desktop/AnimGEN/media/videos/temp_manim_script/240p15/partial_movie_files/PythagorasToCircle/2113059474_310462277_678439765.mp4'

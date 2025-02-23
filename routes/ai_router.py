@@ -30,56 +30,53 @@ cloudinary.config(
     secure=True
 )
 
-MONGO_URI = "mongodb+srv://ashishrathod53839:ashishashish@cluster1.vki9pld.mongodb.net/"
+# MongoDB configuration
+MONGO_URI = os.getenv("MONGO_URI")
+mongodb_client = None
+db = None
+videos_collection = None
 
 def initialize_mongodb():
+    """Initialize MongoDB connection and return client, db, and collection"""
     try:
-        # Connect with a timeout of 5 seconds
         client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-        # Test the connection
-        client.server_info()
+        client.server_info()  # Test connection
         
-        # Create or get the database
         db = client['video_database']
+        videos_collection = db.videos
         
-        # Create or get the collection
-        if 'videos' not in db.list_collection_names():
-            # Create the collection with validation
-            db.create_collection('videos')
-            print("Videos collection created successfully")
-            
-        videos_collection = db['videos']
-        
-        # Create an index on timestamp for efficient sorting
+        # Create index for efficient timestamp-based sorting
         videos_collection.create_index([("timestamp", -1)])
         
         print("MongoDB initialized successfully")
         return client, db, videos_collection
     except ServerSelectionTimeoutError:
-        print("Could not connect to MongoDB server. Please check your connection string and internet connection.")
+        print("Could not connect to MongoDB server. Check connection string and internet connection.")
         raise
     except Exception as e:
         print(f"Error initializing MongoDB: {str(e)}")
         raise
 
+# Initialize MongoDB connection
 try:
-    client, db, videos_collection = initialize_mongodb()
+    mongodb_client, db, videos_collection = initialize_mongodb()
 except Exception as e:
     print(f"Failed to initialize MongoDB: {str(e)}")
-    # You might want to exit the application here depending on your requirements
-    # sys.exit(1)
 
-
-
-def store_video_url(url, prompt):
+def store_video_url(videos_collection, url, prompt):
     """Store video URL and metadata in MongoDB"""
-    video_data = {
-        'url': url,
-        'prompt': prompt,
-        'timestamp': datetime.now(timezone.utc),
-        'status': 'completed'
-    }
-    return videos_collection.insert_one(video_data)
+    try:
+        video_data = {
+            'url': url,
+            'prompt': prompt,
+            'timestamp': datetime.now(timezone.utc),
+            'status': 'completed'
+        }
+        result = videos_collection.insert_one(video_data)
+        return result
+    except Exception as e:
+        print(f"Error storing video URL: {str(e)}")
+        raise
 
 def extract_scene_name(python_file_path):
     """Extract the name of the Scene class from the Python file."""
@@ -87,7 +84,6 @@ def extract_scene_name(python_file_path):
         with open(python_file_path, 'r') as file:
             tree = ast.parse(file.read())
             
-        # Look for class definitions that inherit from Scene or MovingCameraScene
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
@@ -105,9 +101,8 @@ def generate_video():
         user_prompt = data.get('prompt', '').strip()
         
         if not user_prompt:
-            return jsonify({'success': False, 'error': 'No prompt provided'}), 400
+            return jsonify({'error': 'No prompt provided'}), 400
 
-        # Prepare the message payload for the OpenAI request
         messages = [
             {
                 "role": "user",
@@ -124,7 +119,8 @@ def generate_video():
                     - **Shorten user-provided text**, using shapes, animations, and concise phrases.
                     - **Aspect Ratio:** Generate animations for **1920x1080** with a **safe area of 1600x900**.
                     - Use **MovingCameraScene** instead of **Scene** when using the camera.
-
+                    - Utilize the screen and make sure the content of video remains within the sceen.
+                    - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
                     **Required Libraries:** 
                     ```python
                     from manim import *
@@ -138,36 +134,34 @@ def generate_video():
             }
         ]
 
-        # Request completion from OpenAI
+        # Get completion from OpenAI
         completion = client.chat.completions.create(
             model="qwen/qwen2.5-vl-72b-instruct:free",
             messages=messages
         )
 
-        # Extract the generated Manim code from the response
         ai_code = completion.choices[0].message.content.strip()
         print(f"AI Generated Code:\n{ai_code}\n{'-'*40}")
 
-        # Convert and clean up the generated code using the code_converter module
         manim_code = code_converter.extract_code_from_response(ai_code)
         print(f"Converted Manim Code:\n{manim_code}\n{'-'*40}")
 
-        # Save the Manim code to a temporary Python file
+        # Save code to temporary file
         manim_file_path = 'temp_manim_script.py'
         with open(manim_file_path, 'w') as f:
             f.write(manim_code)
 
-        # Extract the scene name from the Python file
         scene_name = extract_scene_name(manim_file_path)
         if not scene_name:
-            return jsonify({'success': False, 'error': 'Could not determine scene name from generated code'}), 500
+            return jsonify({'error': 'Could not determine scene name from generated code'}), 500
 
         print(f"Detected scene name: {scene_name}")
 
-        # Generate the video using Manim
+        # Setup output directory
         output_directory = 'media'
         os.makedirs(output_directory, exist_ok=True)
 
+        # Generate video with Manim
         command = [
             'manim',
             '-pql',                    # Low quality (240p) preview
@@ -176,23 +170,21 @@ def generate_video():
             manim_file_path
         ]
 
-        # Run manim command
         process = subprocess.run(command, capture_output=True, text=True, check=True)
         print(f"Manim output:\n{process.stdout}")
 
-        # Construct the expected video path using the scene name
+        # Find generated video
         expected_video_path = os.path.join(
             output_directory,
             'videos',
             'temp_manim_script',
-            '240p15',  # This is the resolution-specific subdirectory
+            '240p15',
             f"{scene_name}.mp4"
         )
 
         print(f"Looking for video at: {expected_video_path}")
 
         if not os.path.exists(expected_video_path):
-            # If not found, try to find it by searching through the directory
             search_dir = os.path.join(output_directory, 'videos', 'temp_manim_script')
             found_files = []
             for root, dirs, files in os.walk(search_dir):
@@ -204,7 +196,6 @@ def generate_video():
                 expected_video_path = found_files[0]
             else:
                 return jsonify({
-                    'success': False,
                     'error': 'Generated video not found',
                     'debug_info': {
                         'scene_name': scene_name,
@@ -216,52 +207,55 @@ def generate_video():
                     }
                 }), 500
 
-        # Upload the video to Cloudinary
+        # Upload to Cloudinary
         upload_result = cloudinary_upload(expected_video_path, resource_type='video')
         video_url = upload_result.get('url')
 
         if not video_url:
-            return jsonify({'success': False, 'error': 'Video upload to Cloudinary failed'}), 500
+            return jsonify({'error': 'Video upload to Cloudinary failed'}), 500
 
-        # HERE delete the media folder for clean up
         try:
+            stored_video = store_video_url(videos_collection, video_url, user_prompt)
+            response_data = {
+                'video_url': video_url,
+                'video_id': str(stored_video.inserted_id)
+            }
+            
+            # Clean up files
             if os.path.exists('media'):
                 shutil.rmtree('media')
             if os.path.exists('temp_manim_script.py'):
                 os.remove('temp_manim_script.py')
+                
+            return jsonify(response_data)
             
-        except Exception as e:
-            print(f"Cleanup error (non-critical): {str(e)}")
-
-        return jsonify({
-            'success': True,
-            'video_url': video_url,
-            'video_path': expected_video_path
-        }), 200
-
-        # try:
-        #     stored_video = store_video_url(video_url, user_prompt)
-        #     response_data = {
-        #         'video_url': video_url,
-        #         'video_id': str(stored_video.inserted_id)
-        #     }
-        #     return jsonify(response_data)
-        # except Exception as db_error:
-        #     print(f"Database error: {str(db_error)}")
-        #     # Still return the video URL even if database storage fails
-
-        #     return jsonify({
-        #         'video_url': video_url,
-        #         'warning': 'Video generated but failed to save to history'
-        #     })
-
-        
-
+        except Exception as db_error:
+            print(f"Database error: {str(db_error)}")
+            return jsonify({
+                'video_url': video_url,
+                'warning': 'Video generated but failed to save to history'
+            })
 
     except Exception as e:
         error_message = f"Error in generate-video: {str(e)}"
         print(error_message)
-        return jsonify({
-            'success': False,
-            'error': error_message
-        }), 500
+        return jsonify({'error': error_message}), 500
+
+@ai_routes.route('/videos', methods=['GET'])
+def get_videos():
+    try:
+        # Get the 10 most recent videos
+        videos = list(videos_collection.find(
+            {},
+            {'_id': 1, 'url': 1, 'prompt': 1, 'timestamp': 1}
+        ).sort('timestamp', -1).limit(10))
+        
+        # Format the response
+        for video in videos:
+            video['_id'] = str(video['_id'])
+            video['timestamp'] = video['timestamp'].isoformat()
+            
+        return jsonify(videos)
+    except Exception as e:
+        print(f"Error fetching videos: {str(e)}")
+        return jsonify({'error': str(e)}), 500
