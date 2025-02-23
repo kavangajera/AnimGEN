@@ -7,6 +7,7 @@ import routes.code_converter as code_converter
 from cloudinary.uploader import upload as cloudinary_upload
 import cloudinary
 import ast
+import shutil
 
 load_dotenv()
 
@@ -168,11 +169,21 @@ def generate_video():
         if not video_url:
             return jsonify({'success': False, 'error': 'Video upload to Cloudinary failed'}), 500
 
+        # HERE delete the media folder for clean up
+        try:
+            if os.path.exists('media'):
+                shutil.rmtree('media')
+            if os.path.exists('temp_manim_script.py'):
+                os.remove('temp_manim_script.py')
+        except Exception as e:
+            print(f"Cleanup error (non-critical): {str(e)}")
+
         return jsonify({
             'success': True,
             'video_url': video_url,
             'video_path': expected_video_path
         }), 200
+
 
     except Exception as e:
         error_message = f"Error in generate-video: {str(e)}"
