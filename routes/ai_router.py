@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import routes.code_converter as code_converter
 from cloudinary.uploader import upload as cloudinary_upload
 import cloudinary
+import ast
 
 load_dotenv()
 
@@ -24,6 +25,23 @@ cloudinary.config(
     api_secret=os.getenv('CLOUDINARY_API_SECRET'),
     secure=True
 )
+
+def extract_scene_name(python_file_path):
+    """Extract the name of the Scene class from the Python file."""
+    try:
+        with open(python_file_path, 'r') as file:
+            tree = ast.parse(file.read())
+            
+        # Look for class definitions that inherit from Scene or MovingCameraScene
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for base in node.bases:
+                    if isinstance(base, ast.Name) and base.id in ['Scene', 'MovingCameraScene']:
+                        return node.name
+        return None
+    except Exception as e:
+        print(f"Error extracting scene name: {str(e)}")
+        return None
 
 @ai_routes.route('/generate-video', methods=['POST'])
 def generate_video():
@@ -84,7 +102,14 @@ def generate_video():
         with open(manim_file_path, 'w') as f:
             f.write(manim_code)
 
-        # Generate the video using Manim with 240p resolution
+        # Extract the scene name from the Python file
+        scene_name = extract_scene_name(manim_file_path)
+        if not scene_name:
+            return jsonify({'success': False, 'error': 'Could not determine scene name from generated code'}), 500
+
+        print(f"Detected scene name: {scene_name}")
+
+        # Generate the video using Manim
         output_directory = 'media'
         os.makedirs(output_directory, exist_ok=True)
 
@@ -96,26 +121,57 @@ def generate_video():
             manim_file_path
         ]
 
-        subprocess.run(command, check=True)
+        # Run manim command
+        process = subprocess.run(command, capture_output=True, text=True, check=True)
+        print(f"Manim output:\n{process.stdout}")
 
-        # Find the generated video file
-        video_files = [f for f in os.listdir(output_directory) if f.endswith('.mp4')]
-        if not video_files:
-            return jsonify({'success': False, 'error': 'Video generation failed'}), 500
+        # Construct the expected video path using the scene name
+        expected_video_path = os.path.join(
+            output_directory,
+            'videos',
+            'temp_manim_script',
+            '240p15',  # This is the resolution-specific subdirectory
+            f"{scene_name}.mp4"
+        )
 
-        video_path = os.path.join(output_directory, video_files[0])
+        print(f"Looking for video at: {expected_video_path}")
+
+        if not os.path.exists(expected_video_path):
+            # If not found, try to find it by searching through the directory
+            search_dir = os.path.join(output_directory, 'videos', 'temp_manim_script')
+            found_files = []
+            for root, dirs, files in os.walk(search_dir):
+                for file in files:
+                    if file.endswith('.mp4') and scene_name in file:
+                        found_files.append(os.path.join(root, file))
+            
+            if found_files:
+                expected_video_path = found_files[0]
+            else:
+                return jsonify({
+                    'success': False,
+                    'error': 'Generated video not found',
+                    'debug_info': {
+                        'scene_name': scene_name,
+                        'expected_path': expected_video_path,
+                        'searched_directory': search_dir,
+                        'found_files': found_files,
+                        'manim_output': process.stdout,
+                        'manim_errors': process.stderr if hasattr(process, 'stderr') else None
+                    }
+                }), 500
 
         # Upload the video to Cloudinary
-        upload_result = cloudinary_upload(video_path, resource_type='video')
+        upload_result = cloudinary_upload(expected_video_path, resource_type='video')
         video_url = upload_result.get('url')
 
         if not video_url:
             return jsonify({'success': False, 'error': 'Video upload to Cloudinary failed'}), 500
 
-        # Return the video URL in the response
         return jsonify({
             'success': True,
-            'video_url': video_url
+            'video_url': video_url,
+            'video_path': expected_video_path
         }), 200
 
     except Exception as e:

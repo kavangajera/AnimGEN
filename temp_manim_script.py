@@ -3,51 +3,57 @@ import numpy as np
 import random
 import math
 
-class PythagorasToCircle(MovingCameraScene):
+class EuclideanEquationToCircle(MovingCameraScene):
     def construct(self):
         self.camera.frame.save_state()
         
-        # Pythagoras Equation
-        a = 3
-        b = 4
-        c = math.sqrt(a**2 + b**2)
+        # Euclidean Equation
+        euclidean_eq = MathTex(r"a^2 + b^2 = c^2", font_size=72)
+        euclidean_eq.shift(UP * 2)
         
-        square_a = Square(side_length=a, color=BLUE, fill_opacity=0.5)
-        square_b = Square(side_length=b, color=GREEN, fill_opacity=0.5)
-        square_c = Square(side_length=c, color=RED, fill_opacity=0.5)
-        
-        square_a.shift(LEFT * 2 + DOWN * 2)
-        square_b.shift(RIGHT * 2 + DOWN * 2)
-        square_c.shift(UP * 2)
-        
-        triangle = Polygon(
-            square_a.get_corner(UR),
-            square_b.get_corner(UL),
-            square_c.get_corner(DL),
-            fill_opacity=0.5,
-            color=YELLOW
-        )
-        
-        eq = MathTex(r"a^2 + b^2 = c^2", color=WHITE).scale(1.5).to_edge(DOWN)
-        
-        self.play(
-            DrawBorderThenFill(square_a),
-            DrawBorderThenFill(square_b),
-            DrawBorderThenFill(square_c),
-            run_time=2
-        )
-        self.play(Write(eq))
-        self.play(FadeIn(triangle))
-        self.wait(2)
+        self.play(Write(euclidean_eq))
+        self.wait(1)
         
         # Transition to Circle
+        circle = Circle(radius=2, color=BLUE)
+        circle.shift(DOWN * 2)
+        
         self.play(
-            self.camera.frame.animate.scale(0.5).move_to(square_c),
-            FadeOut(square_a), FadeOut(square_b), FadeOut(triangle), FadeOut(eq),
-            run_time=2
+            TransformMatchingTex(euclidean_eq, MathTex(r"x^2 + y^2 = r^2", font_size=72).shift(UP * 2)),
+            self.camera.frame.animate.move_to(circle).scale(0.5)
         )
+        self.wait(1)
         
-        circle = Circle(radius=c/2, color=RED, fill_opacity=0.5).move_to(square_c.get_center())
-        self.play(Transform(square_c, circle), run_time=2)
+        self.play(Create(circle))
+        self.wait(2)
         
+        # Highlighting parts of the circle
+        radius_line = Line(circle.get_center(), circle.point_at_angle(0), color=YELLOW)
+        radius_text = MathTex("r", color=YELLOW).next_to(radius_line, RIGHT)
+        
+        self.play(
+            Create(radius_line),
+            Write(radius_text)
+        )
+        self.wait(1)
+        
+        # Adding a point on the circle
+        point_on_circle = Dot(circle.point_at_angle(PI/4), color=RED)
+        x_line = Line(circle.get_center(), point_on_circle.get_center(), color=GREEN).set_opacity(0.5)
+        y_line = x_line.copy().rotate(PI/2).set_color(ORANGE)
+        
+        self.play(
+            FadeIn(point_on_circle),
+            Create(x_line),
+            Create(y_line)
+        )
+        self.wait(1)
+        
+        x_text = MathTex("x", color=GREEN).next_to(x_line, DOWN)
+        y_text = MathTex("y", color=ORANGE).next_to(y_line, LEFT)
+        
+        self.play(
+            Write(x_text),
+            Write(y_text)
+        )
         self.wait(2)
