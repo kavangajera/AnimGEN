@@ -244,11 +244,11 @@ def generate_video():
 @ai_routes.route('/videos', methods=['GET'])
 def get_videos():
     try:
-        # Get the 10 most recent videos
+        # Get the all videos
         videos = list(videos_collection.find(
             {},
             {'_id': 1, 'url': 1, 'prompt': 1, 'timestamp': 1}
-        ).sort('timestamp', -1).limit(10))
+        ).sort('timestamp', -1))
         
         # Format the response
         for video in videos:
