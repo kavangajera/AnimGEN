@@ -290,6 +290,8 @@ def generate_video():
 
         if not video_url:
             return jsonify({'error': 'Video upload to Cloudinary failed'}), 500
+        
+        video_url = video_url.replace("http://", "https://")
 
         try:
             stored_video = store_video_url(videos_collection, video_url, user_prompt)

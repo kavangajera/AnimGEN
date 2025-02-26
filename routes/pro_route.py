@@ -108,10 +108,92 @@ def generate_pro_video():
                     - **MathTex** must use **r""** syntax for proper equation formatting.
                     - **Shorten user-provided text**, using shapes, animations, and concise phrases.
                     - **Aspect Ratio:** Generate animations for **1920x1080** with a **safe area of 1600x900**.
+                    
+                    ** Utilize the full screen size provided above and make sure nothing goes out of the screen
+                    ** zoom out approprately if fonts goes out of the screen.
                     - Use **MovingCameraScene** instead of **Scene** when using the camera.
                     - Utilize the screen and make sure the content of video remains within the sceen.
                     - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
-                    ** AVOID --> errors of MObject like : Mobject.__init__() got an unexpected keyword argument 'side_length'
+                    
+
+
+                    ** Please use shapes classes in this form only : 
+                    Here's a brief definition of the common shape functions in Manim CE and their required parameters:
+
+                        Circle
+
+                        Required: None
+                        Optional: radius, color, stroke_width
+                        Example: Circle(radius=2, color=RED)
+
+
+                        Square
+
+                        Required: None
+                        Optional: side_length, color
+                        Example: Square(side_length=2, color=GREEN)
+
+
+                        Rectangle
+
+                        Required: None
+                        Optional: width, height, color
+                        Example: Rectangle(width=4, height=2, color=BLUE)
+
+
+                        Triangle
+
+                        Use Polygon with 3 points
+                        Example: Polygon([-1,0,0], [1,0,0], [0,1,0], color=YELLOW)
+
+
+                        RegularPolygon
+
+                        Required: n (number of sides)
+                        Optional: radius (NOT side_length), color
+                        Example: RegularPolygon(n=5, radius=2, color=TEAL)
+
+
+                        Polygon
+
+                        Required: At least 3 points (as arrays)
+                        Optional: color
+                        Example: Polygon([0,0,0], [1,0,0], [0,1,0], color=PURPLE)
+
+
+                        Ellipse
+
+                        Required: None
+                        Optional: width, height, color
+                        Example: Ellipse(width=4, height=2, color=PINK)
+
+
+                        Line
+
+                        Required: start, end (as points)
+                        Optional: color, stroke_width
+                        Example: Line([0,0,0], [1,1,0], color=WHITE)
+
+
+                        Arc
+
+                        Required: None
+                        Optional: radius, angle, start_angle, color
+                        Example: Arc(radius=2, angle=PI/2, color=ORANGE)
+
+
+                        Dot
+
+                        Required: None
+                        Optional: point, radius, color
+                        Example: Dot(point=[0,0,0], radius=0.1, color=RED)
+
+                    **
+
+                    ** Make smooth transitions from slide to slide (Shapes to shapes to text etc)
+                    ** Dont make all shapes or text in one slide ** First clear the area and then make animation at that place
+
+
                     **Required Libraries:** 
                     ```python
                     from manim import *
@@ -122,6 +204,8 @@ def generate_pro_video():
 
                     **User's prompt:** {user_prompt}
                     ** user prompt includes one Array make animations as per that array and also consider user's abstract Prompt
+                    ** make video in sync with audio in the form of text given in Array .
+                    ** if animations are fast then provide delay using wait , if there is long intro then you may provide longer wait(10) say 10 seconds manage that
                 """
             }
         ]
@@ -157,6 +241,8 @@ def generate_pro_video():
 
         if not video_url:
             return jsonify({'error': 'Video upload to Cloudinary failed'}), 500
+        
+        video_url = video_url.replace("http://", "https://")
 
         try:
             stored_video = store_video_url(videos_collection, video_url, user_prompt)
@@ -182,3 +268,21 @@ def generate_pro_video():
         print(error_message)
         return jsonify({'error': error_message}), 500
 
+@pro_routes.route('/pro-videos', methods=['GET'])
+def get_pro_videos():
+    try:
+        # Get the all videos
+        videos = list(videos_collection.find(
+            {},
+            {'_id': 1, 'url': 1, 'prompt': 1, 'timestamp': 1}
+        ).sort('timestamp', -1))
+        
+        # Format the response
+        for video in videos:
+            video['_id'] = str(video['_id'])
+            video['timestamp'] = video['timestamp'].isoformat()
+            
+        return jsonify(videos)
+    except Exception as e:
+        print(f"Error fetching videos: {str(e)}")
+        return jsonify({'error': str(e)}), 500
