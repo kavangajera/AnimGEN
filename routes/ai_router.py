@@ -121,6 +121,83 @@ def generate_video():
                     - Use **MovingCameraScene** instead of **Scene** when using the camera.
                     - Utilize the screen and make sure the content of video remains within the sceen.
                     - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
+
+                    ** Please use shapes classes in this form only : 
+                    Here's a brief definition of the common shape functions in Manim CE and their required parameters:
+
+                        Circle
+
+                        Required: None
+                        Optional: radius, color, stroke_width
+                        Example: Circle(radius=2, color=RED)
+
+
+                        Square
+
+                        Required: None
+                        Optional: side_length, color
+                        Example: Square(side_length=2, color=GREEN)
+
+
+                        Rectangle
+
+                        Required: None
+                        Optional: width, height, color
+                        Example: Rectangle(width=4, height=2, color=BLUE)
+
+
+                        Triangle
+
+                        Use Polygon with 3 points
+                        Example: Polygon([-1,0,0], [1,0,0], [0,1,0], color=YELLOW)
+
+
+                        RegularPolygon
+
+                        Required: n (number of sides)
+                        Optional: radius (NOT side_length), color
+                        Example: RegularPolygon(n=5, radius=2, color=TEAL)
+
+
+                        Polygon
+
+                        Required: At least 3 points (as arrays)
+                        Optional: color
+                        Example: Polygon([0,0,0], [1,0,0], [0,1,0], color=PURPLE)
+
+
+                        Ellipse
+
+                        Required: None
+                        Optional: width, height, color
+                        Example: Ellipse(width=4, height=2, color=PINK)
+
+
+                        Line
+
+                        Required: start, end (as points)
+                        Optional: color, stroke_width
+                        Example: Line([0,0,0], [1,1,0], color=WHITE)
+
+
+                        Arc
+
+                        Required: None
+                        Optional: radius, angle, start_angle, color
+                        Example: Arc(radius=2, angle=PI/2, color=ORANGE)
+
+
+                        Dot
+
+                        Required: None
+                        Optional: point, radius, color
+                        Example: Dot(point=[0,0,0], radius=0.1, color=RED)
+
+                    **
+
+                    ** Make smooth transitions from slide to slide (Shapes to shapes to text etc)
+                    ** Dont make all shapes or text in one slide ** First clear the area and then make animation at that place
+
                     **Required Libraries:** 
                     ```python
                     from manim import *
