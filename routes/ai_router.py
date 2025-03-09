@@ -122,11 +122,11 @@ def generate_video():
                     - Utilize the screen and make sure the content of video remains within the sceen.
                     - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
 
-                    ** If 3D models like sphere is asked then dont show animations infinitely , write finite code and neat code :
+                    ** If 3D models like sphere is asked then dont show animations infinitely , write finite code and neat code
                         
-                        ** Use this type of code snippet for 3D shapes of any equation asked **
+                    Use this type of code snippet for 3D shapes of any equation asked use ThreeDScene **
                         
-                        class SpherePulsingAnimation(ThreeDScene):
+                     ** class SpherePulsingAnimation(ThreeDScene):
                             def construct(self):
                                 # Set the camera orientation for 3D viewing
                                 self.set_camera_orientation(phi=75 * DEGREES, theta=-30 * DEGREES)
@@ -181,13 +181,14 @@ def generate_video():
                                 
                                 # Stop camera rotation and hold the final scene
                                 self.stop_ambient_camera_rotation()
-                                self.wait(2)
+                                self.wait(2) 
+                                
+                                **
                         
                         
-                        # For command line rendering, you would run:
-                        # manim -pqh sphere_animation.py SpherePulsingAnimation
+                        
 
-                    ** Please use shapes classes in this form only : 
+                    ** Please use shapes classes in this form only FOR 2d or 1d animations: 
                     Here's a brief definition of the common shape functions in Manim CE and their required parameters:
 
                         Circle
