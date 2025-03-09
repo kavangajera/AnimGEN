@@ -87,7 +87,7 @@ def extract_scene_name(python_file_path):
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
-                    if isinstance(base, ast.Name) and base.id in ['Scene', 'MovingCameraScene']:
+                    if isinstance(base, ast.Name) and base.id in ['Scene', 'MovingCameraScene','ThreeDScene']:
                         return node.name
         return None
     except Exception as e:
@@ -121,6 +121,71 @@ def generate_video():
                     - Use **MovingCameraScene** instead of **Scene** when using the camera.
                     - Utilize the screen and make sure the content of video remains within the sceen.
                     - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
+
+                    ** If 3D models like sphere is asked then dont show animations infinitely , write finite code and neat code :
+                        
+                        ** Use this type of code snippet for 3D shapes of any equation asked **
+                        
+                        class SpherePulsingAnimation(ThreeDScene):
+                            def construct(self):
+                                # Set the camera orientation for 3D viewing
+                                self.set_camera_orientation(phi=75 * DEGREES, theta=-30 * DEGREES)
+                                
+                                # Create a sphere
+                                sphere = Sphere(
+                                    radius=2,
+                                    resolution=(20, 20),
+                                    fill_opacity=0.8
+                                )
+                                
+                                # Add a nice material look with lighting
+                                sphere.set_color(BLUE)
+                                
+                                # Add the sphere to the scene
+                                self.play(Create(sphere), run_time=1.5)
+                                
+                                # Add axes for reference
+                                axes = ThreeDAxes()
+                                self.play(Create(axes), run_time=1)
+                                
+                                # Rotate the sphere around different axes
+                                self.begin_ambient_camera_rotation(rate=0.2)
+                                self.play(
+                                    Rotate(sphere, angle=2*PI, axis=RIGHT, run_time=5),
+                                    rate_func=linear
+                                )
+                                
+                                # Pulse the sphere by scaling it
+                                for _ in range(2):
+                                    self.play(
+                                        sphere.animate.scale(0.7),
+                                        run_time=1
+                                    )
+                                    self.play(
+                                        sphere.animate.scale(1/0.7),
+                                        run_time=1
+                                    )
+                                
+                                # Change color gradually
+                                self.play(
+                                    sphere.animate.set_color(RED),
+                                    run_time=2
+                                )
+                                
+                                # Rotate while changing back to blue
+                                self.play(
+                                    Rotate(sphere, angle=2*PI, axis=UP, run_time=5),
+                                    sphere.animate.set_color(BLUE),
+                                    rate_func=linear
+                                )
+                                
+                                # Stop camera rotation and hold the final scene
+                                self.stop_ambient_camera_rotation()
+                                self.wait(2)
+                        
+                        
+                        # For command line rendering, you would run:
+                        # manim -pqh sphere_animation.py SpherePulsingAnimation
 
                     ** Please use shapes classes in this form only : 
                     Here's a brief definition of the common shape functions in Manim CE and their required parameters:
