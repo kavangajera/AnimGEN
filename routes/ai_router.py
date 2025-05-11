@@ -121,7 +121,6 @@ def generate_video():
                     - Use **MovingCameraScene** instead of **Scene** when using the camera.
                     - Utilize the screen and make sure the content of video remains within the sceen.
                     - Avoid overlapping and ghosting of texts and animations of graph and shapes to avoid mess
-
                     ** Please use shapes classes in this form only : 
                     Here's a brief definition of the common shape functions in Manim CE and their required parameters:
 
@@ -205,6 +204,7 @@ def generate_video():
                     import random
                     import math
                     ```
+                    When 3D word is used in User's prompt make sure class inheris from **ThreeDScene**.
 
                     **User's prompt:** {user_prompt}
                 """
