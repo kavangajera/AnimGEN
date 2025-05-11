@@ -203,6 +203,7 @@ def generate_pro_video():
                     ```
 
                     **User's prompt:** {user_prompt}
+                    When 3D word is used in User's prompt make sure class inheris from **ThreeDScene**.
                     ** user prompt includes one Array make animations as per that array and also consider user's abstract Prompt
                     ** make video in sync with audio in the form of text given in Array .
                     ** if animations are fast then provide delay using wait , if there is long intro then you may provide longer wait(10) say 10 seconds manage that

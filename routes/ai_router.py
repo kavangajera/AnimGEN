@@ -87,7 +87,7 @@ def extract_scene_name(python_file_path):
         for node in ast.walk(tree):
             if isinstance(node, ast.ClassDef):
                 for base in node.bases:
-                    if isinstance(base, ast.Name) and base.id in ['Scene', 'MovingCameraScene']:
+                    if isinstance(base, ast.Name) and base.id in ['Scene', 'MovingCameraScene', 'ThreeDScene']:
                         return node.name
         return None
     except Exception as e:
