@@ -109,4 +109,5 @@ httpx==0.24.1
 numpy>=1.21.0
 scipy>=1.7.0
 pillow>=8.3.1
+fastapi
 # pycairo>=1.20.1
