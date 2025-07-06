@@ -99,6 +99,7 @@ def generate_video():
     try:
         data = request.json
         user_prompt = data.get('prompt', '').strip()
+        vulgarity_check_constraints = "Avoid generating video if user prompts any bad language,comments on any private part of humans or animals or any type of vulgar language or it tries to abuse someone . Jokes on fatshaming,white-black bias,etc"
         
         if not user_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
@@ -207,6 +208,8 @@ def generate_video():
                     When 3D word is used in User's prompt make sure class inheris from **ThreeDScene**.
 
                     **User's prompt:** {user_prompt}
+                    **Read prompt and generate video only below constraints are satisfied**:
+                    **{vulgarity_check_constraints}**
                 """
             }
         ]
