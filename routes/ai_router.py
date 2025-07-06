@@ -11,6 +11,7 @@ import shutil
 from pymongo import MongoClient
 from datetime import datetime, timezone
 from pymongo.errors import ServerSelectionTimeoutError
+from fastapi import HTTPException
 
 load_dotenv()
 
@@ -99,7 +100,7 @@ def generate_video():
     try:
         data = request.json
         user_prompt = data.get('prompt', '').strip()
-        vulgarity_check_constraints = "Avoid generating video if user prompts any bad language,comments on any private part of humans or animals or any type of vulgar language or it tries to abuse someone . Jokes on fatshaming,white-black bias,etc"
+        vulgarity_check_constraints = "Avoid generating video if user prompts any bad language,comments on any private part of humans or animals or any type of vulgar language or it tries to abuse someone . Jokes on fatshaming,white-black bias,etc . Kissing of two girls and sex related contents."
         
         if not user_prompt:
             return jsonify({'error': 'No prompt provided'}), 400
@@ -208,8 +209,9 @@ def generate_video():
                     When 3D word is used in User's prompt make sure class inheris from **ThreeDScene**.
 
                     **User's prompt:** {user_prompt}
-                    **Read prompt and generate video only below constraints are satisfied**:
-                    **{vulgarity_check_constraints}**
+                    If prompt contains any of the following vulgar things:
+                    {vulgarity_check_constraints}
+                    then give back answer as - **"Vulgar contents not allowed"** this message only nothing else.
                 """
             }
         ]
@@ -221,6 +223,10 @@ def generate_video():
         )
 
         ai_code = completion.choices[0].message.content.strip()
+
+        if ai_code == "Vulgar contents not allowed":
+            raise HTTPException(status_code=500, detail="Vulgar contents not allowed")
+        
         print(f"AI Generated Code:\n{ai_code}\n{'-'*40}")
 
         manim_code = code_converter.extract_code_from_response(ai_code)
