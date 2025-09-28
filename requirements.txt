@@ -110,3 +110,5 @@ numpy>=1.21.0
 scipy>=1.7.0
 pillow>=8.3.1
 # pycairo>=1.20.1
+langchain-huggingface
+huggingface-hub
