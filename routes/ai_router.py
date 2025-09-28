@@ -113,21 +113,21 @@ def is_inappropriate_content(prompt):
         'profanity', 'obscene', 'inappropriate', 'adult', 'mature', 'suggestive',
         'inappropriate', 'offensive', 'disturbing', 'graphic', 'explicit',
         
-        # Non-STEM topics (general)
-        'non-stem', 'non stem', 'entertainment', 'celebrity', 'fashion', 'gossip',
-        'reality show', 'movie', 'actor', 'actress', 'music', 'singer', 'dancer', 
-        'sports', 'game', 'gaming', 'football', 'basketball', 'soccer', 'tennis',
-        'politics', 'election', 'vote', 'political', 'government', 'president',
-        'religion', 'god', 'worship', 'prayer', 'religious', 'church', 'temple', 
-        'mosque', 'bible', 'quran', 'scripture', 'theology', 'worship',
+        # # Non-STEM topics (general)
+        # 'non-stem', 'non stem', 'entertainment', 'celebrity', 'fashion', 'gossip',
+        # 'reality show', 'movie', 'actor', 'actress', 'music', 'singer', 'dancer', 
+        # 'sports', 'game', 'gaming', 'football', 'basketball', 'soccer', 'tennis',
+        # 'politics', 'election', 'vote', 'political', 'government', 'president',
+        # 'religion', 'god', 'worship', 'prayer', 'religious', 'church', 'temple', 
+        # 'mosque', 'bible', 'quran', 'scripture', 'theology', 'worship',
         
-        # Specific non-STEM subjects
-        'literature', 'poetry', 'novel', 'story', 'fiction', 'art', 'painting',
-        'history', 'geography', 'language', 'foreign language', 'grammar', 
-        'writing', 'journalism', 'marketing', 'business', 'economics', 'finance',
-        'management', 'law', 'legal', 'crime', 'court', 'judge', 'lawyer',
-        'military', 'army', 'navy', 'air force', 'war', 'battle', 'soldier',
-        'crime', 'theft', 'murder', 'robbery', 'fraud', 'theft', 'burglary',
+        # # Specific non-STEM subjects
+        # 'literature', 'poetry', 'novel', 'story', 'fiction', 'art', 'painting',
+        # 'history', 'geography', 'language', 'foreign language', 'grammar', 
+        # 'writing', 'journalism', 'marketing', 'business', 'economics', 'finance',
+        # 'management', 'law', 'legal', 'crime', 'court', 'judge', 'lawyer',
+        # 'military', 'army', 'navy', 'air force', 'war', 'battle', 'soldier',
+        # 'crime', 'theft', 'murder', 'robbery', 'fraud', 'theft', 'burglary',
     ]
     
     # Check if any inappropriate keyword is in the prompt
@@ -332,9 +332,16 @@ def generate_video():
         template = ChatPromptTemplate.from_messages([
             ("system", 
                 "You are helpful video generator and explainer of the topics related to STEM."
-                "You will generate manim python code ONLY no explanations."
-                "Make sure you write things in landscape mode NOT portrait mode."
-                "Donot make all scenes in one slide."
+                "**You will generate manim python code ONLY NO explanations.**"
+                """
+                basket = Rectangle(width=0.6, height=0.4, color=BROWN, fill_opacity=0.7) insted of this use
+                basket = Rectangle(width=0.6, height=0.4, color=GRAY_BROWN, fill_opacity=0.7)
+
+                """
+                "**USE THESE colors only in color field : WHITE, BLACK, RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, GOLD, TEAL, MAROON, NAVY, OLIVE, GRAY_BROWN**"
+                "Do not make inverted or portrait videos."
+                "Write whole code in one scene class only.Use fade in and fade out effects.To clean the scenes and then play other animations."
+                "**Use Black background ONLY Like 3blue1brown.**"
                 "First clear the area which is not needed and then make animation at that place."
                 "Dont use .svg files, create graphics from scratch."
                 "Also use required functions and new libraries when needed."
