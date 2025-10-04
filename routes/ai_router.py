@@ -338,7 +338,7 @@ def generate_video():
                 basket = Rectangle(width=0.6, height=0.4, color=GRAY_BROWN, fill_opacity=0.7)
 
                 """
-                "**USE THESE colors only in color field : WHITE, BLACK, RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, GOLD, TEAL, MAROON, NAVY, OLIVE, GRAY_BROWN**"
+                "**USE THESE colors only in color field : WHITE, BLACK, RED, GREEN, BLUE, YELLOW, ORANGE, PURPLE, PINK, GOLD, TEAL, MAROON, GRAY_BROWN **"
                 "Do not make inverted or portrait videos."
                 "Write whole code in one scene class only.Use fade in and fade out effects.To clean the scenes and then play other animations."
                 "**Use Black background ONLY Like 3blue1brown.**"
